@@ -49,9 +49,6 @@ lxc-ls -f
 
 
 
-
-
-
 # case/select statement which shows options to user
 
 select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers'
@@ -59,6 +56,7 @@ do
 	case $REPLY in 
                   1) TASK=deploy-containers;;
 		  2) TASK=kill-all;;
+                  3) TASK=list-running-containers;;
         esac
 
 	if [ -n "$TASK" ]
