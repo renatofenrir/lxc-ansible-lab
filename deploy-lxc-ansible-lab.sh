@@ -39,11 +39,22 @@ done
 }
 
 
+# list all running LXC Containers
+
+list-running-containers () {
+
+lxc-ls -f
+
+}
+
+
+
+
+
 
 # case/select statement which shows options to user
 
-
-select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers'
+select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers'
 do
 	case $REPLY in 
                   1) TASK=deploy-containers;;
