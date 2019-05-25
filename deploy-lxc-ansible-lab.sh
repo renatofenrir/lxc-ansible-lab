@@ -95,7 +95,7 @@ deploy-keys () {
 
 echo Deploying public key to ansible targets.. 
 echo Please, provide authentication details:
-ansible-playbook deploy-authorized.yml -i hosts -u ubuntu -k --ask-sudo-pass
+ansible-playbook deploy-authorized.yml -i hosts -u ubuntu -k --ask-become-pass
 
 }
 
