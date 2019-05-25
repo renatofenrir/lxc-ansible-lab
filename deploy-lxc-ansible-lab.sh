@@ -59,7 +59,7 @@ echo ""
 # Creates a hosts file using the list of all currently running lxc containers.
 # Function just in initial stage, still have to add validation structure to first check 
 # if actually we have instances up and running before trying to generate a list of hosts.
-
+# Also, I have to check if there's already an existing hosts file in current working directory
 
 create-hosts-file () {
 
@@ -77,8 +77,6 @@ done
 }
 
 
-
-
 # add user input validation..
 
 remove-target-container () {
@@ -91,18 +89,28 @@ echo "Container $LXC_NAME killed."
 }
 
 
+# function to deploy public keys
+
+deploy-keys () {
+
+echo Deploying public key to ansible targets.. 
+echo Please, provide authentication details:
+ansible-playbook deploy-authorized.yml -i hosts -u ubuntu -k --ask-sudo-pass
+
+}
+
 
 # case/select statement which shows options to user
 
-select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers' 'Create hosts file' 'List All Running Containers' 'Remove Target Container'
+select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets'
 do
 	case $REPLY in 
                   1) TASK=deploy-containers;;
 		  2) TASK=kill-all;;
                   3) TASK=list-running-containers;;
                   4) TASK=create-hosts-file;;
-                  5) TASK=list-running-containers;;
-                  6) TASK=remove-target-container;;
+                  5) TASK=remove-target-container;;
+                  6) TASK=deploy-keys;;
         esac
 
 	if [ -n "$TASK" ]

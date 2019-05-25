@@ -1,0 +1,17 @@
+- hosts: all
+  gather_facts: False
+  remote_user: ubuntu
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: Update Package
+      raw: (apt-get update -y && apt-get upgrade -y)
+
+    - name: Install Python 2
+      raw: test -e /usr/bin/python || (apt-get update && apt-get install -y python)
+
+    - authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
