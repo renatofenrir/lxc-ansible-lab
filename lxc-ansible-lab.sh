@@ -25,6 +25,8 @@ deploy-containers () {
 
 COUNTER=0
 
+
+check-ssh
 read -p 'how many containers do you want to spin-up: ' AMOUNT
 read -p 'please provide the container kind: ' KIND
 read -p 'and now, please provide a nice name for the containers: ' NAME
@@ -120,6 +122,35 @@ done
 
 
 
+
+
+check-ssh () {
+
+
+if [[ -f ~/.ssh/id_rsa && -f ~/.ssh/id_rsa.pub ]]; then
+   echo "SSH Key Pair looks good. Proceeding.."
+else
+    echo "There is no SSH Key Pair for the user $USER!"
+    read -p "Do you want to create a new SSH Key Pair prior to proceeding? <yes/no>: " answer
+
+	if [ "$answer" == yes ]; then
+	       echo ""
+	       echo "Follow the instructions bellow: "
+	       ssh-keygen -t rsa
+	       echo ""
+	elif [ "$answer" == no ]; then
+	       echo "As you wish. But you cannot use Ansible without it! Exiting.."
+	       exit 0
+	else
+	       echo "Invalid Choice"
+	       exit 1
+	fi
+fi
+
+
+}
+
+
 # add user input validation..
 
 remove-target-container () {
@@ -136,12 +167,26 @@ echo "Container $LXC_NAME killed."
 
 deploy-keys () {
 
+check-ssh
 echo Deploying public key to ansible targets.. 
 echo Please, provide authentication details:
 ansible-playbook deploy-authorized.yml -i hosts -u ubuntu -k --ask-become-pass
 
 }
 
+
+echo ''
+echo ''
+echo '############################################################################'
+echo '#    _                               _ _     _            _       _        #'
+echo '#   | |_  _____       __ _ _ __  ___(_) |__ | | ___      | | __ _| |       #'
+echo '#   | \ \/ / __|____ / _` | \_ \/ __| | |_ \| |/ _ \_____| |/ _` | |_ \    #'
+echo '#   | |>  < (_|_____| (_| | | | \__ \ | |_) | |  __/_____| | (_| | |_) |   #'
+echo '#   |_/_/\_\___|     \__,_|_| |_|___/_|_.__/|_|\___|     |_|\__,_|_.__/    #'
+echo '#                                                                          #'
+echo '############################################################################'
+echo ''
+echo ''
 
 # case/select statement which shows options to user
 
