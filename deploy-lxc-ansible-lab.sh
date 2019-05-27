@@ -61,9 +61,11 @@ echo ""
 # if actually we have instances up and running before trying to generate a list of hosts.
 # Also, I have to check if there's already an existing hosts file in current working directory
 
+
+
 create-hosts-file () {
 
-local LIST=$(lxc-ls -f | grep -v NAME | cut -c37-47)
+local LIST=$(lxc-ls -f | grep -v NAME | cut -c36-46)
 local NUM=$(lxc-ls -f | grep -v NAME | wc -l)
 
 echo "Adding all the $NUM containers to a hosts file on the current directory ----> $PWD"
@@ -75,6 +77,46 @@ do
 done
 
 }
+
+
+
+check-hosts-file () {
+
+if [ -f hosts ]
+then
+    read -p "There is already a hosts file within current directory. Do you still want to create a new one? <yes/no>: " answer
+    if [ "$answer" == yes ]; then
+	rm -f hosts
+	create-hosts-file
+	echo "Great."
+    elif [ "$answer" == no ]; then
+	echo "OK. Proceeding with the existing hosts file.."
+	exit 0
+     else
+	 echo "Invalid Choice"
+	 exit 1
+    fi
+else
+    create-hosts-file
+fi
+
+}
+
+
+
+start-all-containers () {
+
+local CONTAINERS=$(lxc-ls -f |grep -v NAME | cut -c1-12)
+
+### grabbing all container names :)
+
+for container in $CONTAINERS; do
+   lxc-start $container
+   echo $container started.. moving on..
+done
+
+}
+
 
 
 # add user input validation..
@@ -102,15 +144,16 @@ ansible-playbook deploy-authorized.yml -i hosts -u ubuntu -k --ask-become-pass
 
 # case/select statement which shows options to user
 
-select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets'
+select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets' 'Start Stopped Containers'
 do
 	case $REPLY in 
                   1) TASK=deploy-containers;;
 		  2) TASK=kill-all;;
                   3) TASK=list-running-containers;;
-                  4) TASK=create-hosts-file;;
+                  4) TASK=check-hosts-file;;
                   5) TASK=remove-target-container;;
                   6) TASK=deploy-keys;;
+		  7) TASK=start-all-containers;;
         esac
 
 	if [ -n "$TASK" ]
