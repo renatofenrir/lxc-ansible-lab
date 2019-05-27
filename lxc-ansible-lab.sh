@@ -1,4 +1,12 @@
 #!/bin/bash
+# 
+# Maintainer: Renato Rodrigues
+# E-mail: renato.rod.araujo@gmail.com
+# Title: lxc-ansible-lab
+# License: MIT
+#
+
+
 
 
 # function to kill all lxc containers
@@ -64,7 +72,6 @@ echo ""
 # Also, I have to check if there's already an existing hosts file in current working directory
 
 
-
 create-hosts-file () {
 
 #local LIST=$(lxc-ls -f | grep -v NAME | cut -c36-46)
@@ -82,6 +89,7 @@ done
 }
 
 
+# This function checks for an existing hosts file. If there's no hosts file, a new one is going to be created.
 
 check-hosts-file () {
 
@@ -107,6 +115,8 @@ fi
 
 
 
+# Starts all stopped LXC containers..
+
 start-all-containers () {
 
 local CONTAINERS=$(lxc-ls -f |grep -v NAME | cut -c1-12)
@@ -122,7 +132,7 @@ done
 
 
 
-
+# This function makes sure that we have ssh key-pair prior to proceeding the script execution.. 
 
 check-ssh () {
 
@@ -151,7 +161,7 @@ fi
 }
 
 
-# add user input validation..
+# Function to remove a target LXC container.
 
 remove-target-container () {
 
@@ -163,7 +173,8 @@ echo "Container $LXC_NAME killed."
 }
 
 
-# function to deploy public keys
+# Function to deploy public keys. Note that the function check-ssh is going to be called prior 
+# to ssh key deployment.
 
 deploy-keys () {
 
@@ -185,6 +196,7 @@ echo '#   | |>  < (_|_____| (_| | | | \__ \ | |_) | |  __/_____| | (_| | |_) |  
 echo '#   |_/_/\_\___|     \__,_|_| |_|___/_|_.__/|_|\___|     |_|\__,_|_.__/    #'
 echo '#                                                                          #'
 echo '############################################################################'
+echo 'Created by renatofenrir'
 echo ''
 echo ''
 
