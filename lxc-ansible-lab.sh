@@ -69,22 +69,20 @@ echo ""
 # Creates a hosts file using the list of all currently running lxc containers.
 # Function just in initial stage, still have to add validation structure to first check 
 # if actually we have instances up and running before trying to generate a list of hosts.
-# Also, I have to check if there's already an existing hosts file in current working directory
 
 
 create-hosts-file () {
 
-#local LIST=$(lxc-ls -f | grep -v NAME | cut -c36-46)
-LIST=$(lxc-ls -f | grep -v NAME | cut -d "-" -f3)
 local NUM=$(lxc-ls -f | grep -v NAME | wc -l)
 
 echo "Adding all the $NUM containers to a hosts file on the current directory ----> $PWD"
 echo "[all]" >> hosts
 
-for i in $LIST
-do
-   echo $i >> hosts
-done
+for i in $(lxc-ls -f | awk -F' ' '{ print $1 }' | grep -v NAME)
+do 
+     lxc-info $i |grep -v Link | grep ip -i | cut -c17- >> hosts
+done 
+
 
 }
 
@@ -119,7 +117,7 @@ fi
 
 start-all-containers () {
 
-local CONTAINERS=$(lxc-ls -f |grep -v NAME | cut -c1-12)
+local CONTAINERS=$(lxc-ls -f | awk -F' ' '{ print $1 }' | grep -v NAME)
 
 ### grabbing all container names :)
 
