@@ -23,7 +23,13 @@ for container in $RUNNING_CONTAINERS; do
   lxc-autostart --kill --all
   lxc-destroy --name $container --force
 done
- 
+
+echo "Removing hosts file, since we don't have containers anymore.."
+rm -f hosts
+echo "hosts file removed."
+echo "Now you can start fresh :)"
+echo "done."
+
 }
 
 
