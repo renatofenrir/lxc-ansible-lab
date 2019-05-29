@@ -35,16 +35,18 @@ COUNTER=0
 
 
 check-ssh
-read -p 'how many containers do you want to spin-up: ' AMOUNT
-read -p 'please provide the container kind: ' KIND
-read -p 'and now, please provide a nice name for the containers: ' NAME
-
+read -p 'How many containers do you want to spin-up: ' AMOUNT
+read -p 'Please provide the container kind: ' KIND
+read -p 'Please provide a nice name for the containers: ' NAME
+read -p 'Enter the name of the group: ' GROUP
 
 while [  $COUNTER -lt "$AMOUNT" ]; do
     echo $COUNTER containers started
     lxc-create -t $KIND -n "$NAME"-"$COUNTER" && lxc-start -n "$NAME"-"$COUNTER"
     let COUNTER=COUNTER+1 
 done
+
+create-hosts-file-and-group
 
 }
 
@@ -111,6 +113,26 @@ fi
 
 }
 
+
+# This function will create the hosts file as usual BUT will assign the new containers
+# to a new group. This is meant to prevent problems when it comes to SSH KeyPair deployment,
+# because a new mechanism to deploy SSH Keys for individual groups is going to be implemented.
+
+create-hosts-file-and-group () {
+
+local NUM=$(lxc-ls -f | grep -v NAME | wc -l)
+
+echo "Adding all the $NUM containers to a hosts file on the current directory ----> $PWD"
+echo "[$GROUP]" >> hosts
+
+for i in $(lxc-ls -f | awk -F' ' '{ print $1 }' | grep -v NAME)
+do
+     lxc-info $i |grep -v Link | grep ip -i | cut -c17- >> hosts
+done
+
+echo ""
+
+}
 
 
 # Starts all stopped LXC containers..
