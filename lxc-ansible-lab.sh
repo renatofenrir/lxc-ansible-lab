@@ -42,10 +42,11 @@ read -p 'Enter the name of the group: ' GROUP
 
 while [  $COUNTER -lt "$AMOUNT" ]; do
     echo $COUNTER containers started
-    lxc-create -t $KIND -n "$NAME"-"$COUNTER" && lxc-start -n "$NAME"-"$COUNTER"
+    lxc-create -t $KIND -n "$NAME"-"$COUNTER" && lxc-start -n "$NAME"-"$COUNTER" && echo "$NAME"-"$COUNTER" >> container.list
     let COUNTER=COUNTER+1 
 done
 
+sleep 5
 create-hosts-file-and-group
 
 }
@@ -120,17 +121,22 @@ fi
 
 create-hosts-file-and-group () {
 
-local NUM=$(lxc-ls -f | grep -v NAME | wc -l)
+#local NUM=$(lxc-ls -f | grep -v NAME | wc -l)
 
-echo "Adding all the $NUM containers to a hosts file on the current directory ----> $PWD"
+echo "Adding the $GROUP group to a hosts file on the current directory --> $PWD"
 echo "[$GROUP]" >> hosts
 
-for i in $(lxc-ls -f | awk -F' ' '{ print $1 }' | grep -v NAME)
+
+for i in $(cat container.list)
 do
-     lxc-info $i |grep -v Link | grep ip -i | cut -c17- >> hosts
+     lxc-info $i |grep -v Link | grep ip -i | cut -c17- >> hosts.tmp.$GROUP
 done
 
-echo ""
+echo "" >> hosts.tmp.$GROUP
+cat hosts.tmp.$GROUP >> hosts
+sleep 3
+rm hosts.tmp.$GROUP
+rm container.list
 
 }
 
