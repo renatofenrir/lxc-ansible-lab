@@ -96,7 +96,7 @@ check-hosts-file () {
 
 if [ -f hosts ]
 then
-    read -p "There is already a hosts file within the current directory. Do you still want to create a new one? <yes/no>: " answer
+    read -p "An existing hosts file was detected. Do you still want to create a new one? This might cause issues for the next playbook executions.. <yes/no>: " answer
     if [ "$answer" == yes ]; then
 	rm -f hosts
 	create-hosts-file
@@ -206,8 +206,17 @@ deploy-keys () {
 
 check-ssh
 echo Deploying public key to ansible targets.. 
-echo Please, provide authentication details:
-ansible-playbook deploy-authorized.yml -i hosts -u ubuntu -k --ask-become-pass
+echo Please, check the following:
+echo ""
+echo "Group(s) from the hosts file:"
+cat hosts |grep '\['
+echo ""
+read -p 'Please, supply SSH user from remote containers: ' USRKEY
+read -p 'Type in what group would you like to deploy SSH Keys to: ' GRPKEY
+echo "Great, now suppy authentication details..."
+ansible-playbook deploy-authorized.yml -i hosts -u $USRKEY --limit $GRPKEY -k --ask-become-pass
+
+# example: ansible-playbook deploy-authorized.yml -i hosts -u ubuntu --limit 'debian-group' -k --ask-become-pass
 
 }
 
