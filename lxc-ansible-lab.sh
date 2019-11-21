@@ -256,10 +256,8 @@ ansible-playbook deploy-authorized.yml -i hosts -u $USRKEY --limit $GRPKEY -k --
 group-start-stop-execute () {
 
 
+# displaying ip addresses of the containers fromt the selected group:
 awk "/\[$GROUP\]/,/^$/" hosts | sed '1d; $d; s/^ *//'
-
-# generating temp support file to be used as argument to stop containers from specified group
-#awk "/\[$GROUP\]/,/^$/" hosts | sed '1d; $d; s/^ *//' >> group-to-stop.tmp
 
 echo ""
 
