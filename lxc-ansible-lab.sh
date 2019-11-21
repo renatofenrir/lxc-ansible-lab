@@ -18,17 +18,36 @@ LXC=/var/lib/lxc
 ROOTFS=rootfs
 RUNNING_CONTAINERS="$(lxc-ls)"
 
-for container in $RUNNING_CONTAINERS; do
-  echo "Destroying $container..."
-  lxc-autostart --kill --all
-  lxc-destroy --name $container --force
-done
 
-echo "Removing hosts file, since we don't have containers anymore.."
-rm -f hosts
-echo "hosts file removed."
-echo "Now you can start fresh :)"
-echo "done."
+read -p "Are you sure? This action will remove ALL running/stopped containers! <yes/no> " ANSWER
+
+if [ "$ANSWER" == yes ]; then
+
+   for container in $RUNNING_CONTAINERS; do
+      echo "Destroying $container..."
+      lxc-autostart --kill --all
+      lxc-destroy --name $container --force
+   done
+
+   echo "Removing hosts file, since we don't have containers anymore.."
+   rm -f hosts
+   echo "hosts file removed."
+   echo "Now you can start fresh :)"
+   echo "done."
+   exit 0
+
+elif [ "$ANSWER" == no ]; then
+   echo 
+   echo "Ok, quitting now.."
+   echo "Done."
+   exit 0
+
+else 
+   echo 
+   echo "Invalid Choice!"
+   exit 1
+fi
+
 
 }
 
@@ -60,7 +79,7 @@ create-hosts-file-and-group
 
 # list all running LXC Containers
 
-list-running-containers () {
+list-all-containers () {
 
 
 TOTAL=$(lxc-ls -f | grep -v NAME | wc -l)
@@ -219,12 +238,117 @@ cat hosts |grep '\['
 echo ""
 read -p 'Please, supply SSH user from remote containers: ' USRKEY
 read -p 'Type in what group would you like to deploy SSH Keys to: ' GRPKEY
-echo "Great, now suppy authentication details..."
+echo "Great, now supply authentication details..."
 ansible-playbook deploy-authorized.yml -i hosts -u $USRKEY --limit $GRPKEY -k --ask-become-pass
 
 # example: ansible-playbook deploy-authorized.yml -i hosts -u ubuntu --limit 'debian-group' -k --ask-become-pass
 
 }
+
+
+
+# The function 'stop-start-container-group' after being called within the case statement responsible for
+# the menu bellow, after receiveing the user input will finally call right afterwards the function 
+# 'group-start-stop-execute'. This one will start or stop the previously selected container group using 
+# the ansible hosts file as main argument.
+
+
+group-start-stop-execute () {
+
+
+awk "/\[$GROUP\]/,/^$/" hosts | sed '1d; $d; s/^ *//'
+
+# generating temp support file to be used as argument to stop containers from specified group
+#awk "/\[$GROUP\]/,/^$/" hosts | sed '1d; $d; s/^ *//' >> group-to-stop.tmp
+
+echo ""
+
+lxc-ls -f |grep $GROUP | awk -F' ' '{ print $1 }' | grep -v NAME >> group-to-handle.tmp
+
+
+if [ "$ACTION" == stop ]; then
+
+        for container in $(cat group-to-handle.tmp)
+        do
+           lxc-stop $container
+           echo "Stopped container $container"
+        done
+        echo ""
+
+elif [ "$ACTION" == start ]; then
+
+        for container in $(cat group-to-handle.tmp)
+        do
+           lxc-start $container
+           echo "Started container $container"
+        done
+        echo ""
+else
+        echo "Invalid Action!"
+        exit 1
+fi
+
+
+}
+
+
+stop-start-container-group () {
+
+clear
+
+echo ""
+echo "Group(s) found within current hosts file:"
+echo ""
+cat hosts |grep '\['
+echo ""
+
+
+
+read -p "What would you like me to do? <start/stop> " ACTION
+read -p "Ok, which group would you like me to $ACTION: " GROUP
+
+if [ "$ACTION" == stop ]; then
+   echo ""
+   echo "Great, stopping the hosts from $GROUP group.."
+   echo ""
+   group-start-stop-execute
+
+elif [ "$ACTION" == start ]; then
+   echo ""
+   echo "Great, starting the hosts from $GROUP group.."
+   echo ""
+   group-start-stop-execute
+
+else
+        echo "Invalid Action! [Options: start/stop]"
+        echo "Exiting.."
+        exit 1
+fi
+
+
+# removing temp file
+rm -f group-to-handle.tmp
+echo ""
+echo "--------------------------------------------------------------------------"
+echo "Now please check the updated status of $GROUP container group bellow:"
+echo "--------------------------------------------------------------------------"
+echo ""
+
+lxc-ls -f |grep $GROUP
+
+echo 
+echo "Done!"
+echo ""
+
+}
+
+
+
+#remove-container-group () {
+#}
+
+
+
 
 
 echo ''
@@ -243,16 +367,19 @@ echo ''
 
 # case/select statement which shows options to user
 
-select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Running Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets' 'Start Stopped Containers'
+select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets' 'Start Stopped Containers' 'Stop/Start group of Containers' 'Remove Group of Containers'
+
 do
 	case $REPLY in 
                   1) TASK=deploy-containers;;
 		  2) TASK=kill-all;;
-                  3) TASK=list-running-containers;;
+                  3) TASK=list-all-containers;;
                   4) TASK=check-hosts-file;;
                   5) TASK=remove-target-container;;
                   6) TASK=deploy-keys;;
 		  7) TASK=start-all-containers;;
+		  8) TASK=stop-start-container-group;;
+		  9) TASK=remove-container-group;;
         esac
 
 	if [ -n "$TASK" ]

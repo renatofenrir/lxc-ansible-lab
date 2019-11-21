@@ -1,0 +1,29 @@
+---
+# YAML documents begin with the document separator ---
+ 
+# The minus in YAML this indicates a list item.  The playbook contains a list
+# of plays, with each play being a dictionary
+-
+ 
+  # Target: where our play will run and options it will run with
+  hosts: all
+
+  # Task: the list of tasks that will be executed within the play, this section
+  # can also be used for pre and post tasks
+  tasks:
+    - name: Show IP Address
+      debug:
+        msg: The current host is "{{ ansible_default_ipv4.address }}"
+
+    - name: Show Hostname
+      debug:
+        msg: The current hostname is "{{ ansible_hostname }}" 
+
+    - name: Show hostname via linux echo command
+      command: echo my hostname is "{{ ansible_hostname }}"
+
+    - name: Execute ifconfig and show hostname
+      command: ifconfig && echo my hostname is "{{ ansible_hostname }}"
+
+# Three dots indicate the end of a YAML document
+...

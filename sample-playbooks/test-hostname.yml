@@ -1,0 +1,6 @@
+- name: Testing hostname as a variable
+  hosts: teste
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Echoing hostname of {{ inventory_hostname }}
