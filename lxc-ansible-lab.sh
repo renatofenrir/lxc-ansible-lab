@@ -249,11 +249,11 @@ ansible-playbook deploy-authorized.yml -i hosts -u $USRKEY --limit $GRPKEY -k --
 
 # The function 'stop-start-container-group' after being called within the case statement responsible for
 # the menu bellow, after receiveing the user input will finally call right afterwards the function 
-# 'group-start-stop-execute'. This one will start or stop the previously selected container group using 
-# the ansible hosts file as main argument.
+# 'group-start-stop-destroy-execute'. This one will start, stop or destroy the previously selected 
+# container group using the ansible hosts file as main argument during the execution.
 
 
-group-start-stop-execute () {
+group-start-stop-destroy-execute () {
 
 
 # displaying ip addresses of the containers fromt the selected group:
@@ -281,6 +281,17 @@ elif [ "$ACTION" == start ]; then
            echo "Started container $container"
         done
         echo ""
+
+elif [ "$ACTION" == destroy ]; then
+
+        for container in $(cat group-to-handle.tmp)
+        do
+	   echo "Destroying container $container..."
+           lxc-destroy --name $container --force
+           echo "Destroyed container $container"
+        done
+        echo ""
+
 else
         echo "Invalid Action!"
         exit 1
@@ -290,7 +301,7 @@ fi
 }
 
 
-stop-start-container-group () {
+stop-start-destroy-container-group () {
 
 clear
 
@@ -302,23 +313,41 @@ echo ""
 
 
 
-read -p "What would you like me to do? <start/stop> " ACTION
+read -p "What would you like me to do? <start/stop/destroy> " ACTION
 read -p "Ok, which group would you like me to $ACTION: " GROUP
 
 if [ "$ACTION" == stop ]; then
    echo ""
-   echo "Great, stopping the hosts from $GROUP group.."
+   echo "Great, stopping the containers from $GROUP group.."
    echo ""
-   group-start-stop-execute
+   group-start-stop-destroy-execute
 
 elif [ "$ACTION" == start ]; then
    echo ""
-   echo "Great, starting the hosts from $GROUP group.."
+   echo "Great, starting the containers from $GROUP group.."
    echo ""
-   group-start-stop-execute
+   group-start-stop-destroy-execute
+
+elif [ "$ACTION" == destroy ]; then
+   
+   read -p "Are you sure you want to detroy group $GROUP? <yes/no> " SURE
+	
+        if [ "$SURE" == yes ]; then
+           echo ""
+           echo "Great, destroying all containers from $GROUP group.."
+           echo ""
+           group-start-stop-destroy-execute
+        elif [ "$SURE" == no ]; then
+	   echo ""
+	   echo "No problem. Exiting now.."
+	   exit 0
+	else
+	   echo "Invalid Choice! Please, type in yes or no. Exiting.."
+	   exit 1
+        fi
 
 else
-        echo "Invalid Action! [Options: start/stop]"
+        echo "Invalid Action! [Options: start/stop/destroy]"
         echo "Exiting.."
         exit 1
 fi
@@ -342,11 +371,6 @@ echo ""
 
 
 
-#remove-container-group () {
-#}
-
-
-
 
 
 echo ''
@@ -365,7 +389,7 @@ echo ''
 
 # case/select statement which shows options to user
 
-select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets' 'Start Stopped Containers' 'Stop/Start group of Containers' 'Remove Group of Containers'
+select TASK in 'Deploy LXC Containers' 'Destroy All LXC Containers' 'List All Containers' 'Create hosts file' 'Remove Target Container' 'Deploy Public Key To Ansible Targets' 'Start Stopped Containers' 'Stop/Start/Destroy group of Containers' 'Remove Group of Containers'
 
 do
 	case $REPLY in 
@@ -376,7 +400,7 @@ do
                   5) TASK=remove-target-container;;
                   6) TASK=deploy-keys;;
 		  7) TASK=start-all-containers;;
-		  8) TASK=stop-start-container-group;;
+		  8) TASK=stop-start-destroy-container-group;;
 		  9) TASK=remove-container-group;;
         esac
 
