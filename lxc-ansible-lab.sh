@@ -256,7 +256,7 @@ ansible-playbook deploy-authorized.yml -i hosts -u $USRKEY --limit $GRPKEY -k --
 group-start-stop-destroy-execute () {
 
 
-# displaying ip addresses of the containers fromt the selected group:
+# displaying ip addresses of the containers from the selected group:
 awk "/\[$GROUP\]/,/^$/" hosts | sed '1d; $d; s/^ *//'
 
 echo ""
@@ -299,6 +299,34 @@ fi
 
 
 }
+
+
+
+# the function bellow will edit the hosts file accordingly; this means that if the user removes
+# a group of hosts, those will also be removed from the hosts file, to match the current state.
+
+update-hosts-file () {
+
+
+echo "Removing group $RM_GROUP ..."
+
+rm -f delete.hosts.tmp
+echo "$RM_GROUP" >> delete.hosts.tmp
+awk "/\[$RM_GROUP\]/,/^$/" file | sed '1d; $d; s/^ *//' >> delete.hosts.tmp
+
+# the for statement bellow will remove all occurrences that match
+for i in $(cat delete.hosts.tmp); do sed -i "/$i/d" ./file; done
+
+# removing blank lines and recreating the file
+cat -s file >> new-file
+rm -f file && mv new-file file
+rm -f delete.hosts.tmp
+echo "Done."
+
+
+}
+
+
 
 
 stop-start-destroy-container-group () {
