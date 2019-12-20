@@ -290,8 +290,9 @@ elif [ "$ACTION" == destroy ]; then
            lxc-destroy --name $container --force
            echo "Destroyed container $container"
         done
-        echo ""
-
+	# CALLING FUNCTION TO UPDATE HOSTS FILE BELLOW!
+	update-hosts-file
+        echo ""        
 else
         echo "Invalid Action!"
         exit 1
@@ -307,25 +308,22 @@ fi
 
 update-hosts-file () {
 
-
-echo "Removing group $RM_GROUP ..."
+echo "Removing group $GROUP from hosts file..."
 
 rm -f delete.hosts.tmp
-echo "$RM_GROUP" >> delete.hosts.tmp
-awk "/\[$RM_GROUP\]/,/^$/" file | sed '1d; $d; s/^ *//' >> delete.hosts.tmp
+echo "$GROUP" >> delete.hosts.tmp
+awk "/\[$GROUP\]/,/^$/" hosts | sed '1d; $d; s/^ *//' >> delete.hosts.tmp
 
 # the for statement bellow will remove all occurrences that match
-for i in $(cat delete.hosts.tmp); do sed -i "/$i/d" ./file; done
+for i in $(cat delete.hosts.tmp); do sed -i "/$i/d" ./hosts; done
 
 # removing blank lines and recreating the file
-cat -s file >> new-file
-rm -f file && mv new-file file
+cat -s hosts >> new-hosts
+rm -f hosts && mv new-hosts hosts
 rm -f delete.hosts.tmp
 echo "Done."
 
-
 }
-
 
 
 
